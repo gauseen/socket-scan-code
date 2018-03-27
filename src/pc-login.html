@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<title>socket scan code</title>
+	<style>
+		.box{
+			margin: 0 auto;
+			height: 200px;
+			width: 200px;
+			position: relative;
+		}
+		.uid{
+			margin-top: 23px;
+			text-align: center;
+		}
+		.mask{
+			display: none;
+			position: absolute;
+			left: 0;
+			top: 0;
+			width: 100%;
+			height: 100%;
+			line-height: 200px;
+			text-align: center;
+		}
+		.mask__active{
+			background: rgba(0, 0, 0,.63)
+		}
+	</style>
+</head>
+<body>
+	<section>
+		<p class="uid" id="uid"></p>
+		<div class="box" id="box">
+			<div class="qrcode" id="qrcode"></div>
+			<div class="mask" id="mask">授权成功</div>
+		</div>
+	</section>
+	<script src="../lib/utils.js"></script>
+	<script src="../lib/qrcode.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.4/socket.io.js"></script>
+	<script>
+		var qrcode = null
+		var socket = io()
+		
+		var scanCode = {
+			init: function () {
+				var timestamp = this.methods.makeID()
+				$('#uid').innerText = timestamp
+
+				qrcode = new QRCode($('#qrcode'), {
+					text: `http://47.93.29.135:3001/mobile.html?uid=${timestamp}`,
+					width: 200,
+					height: 200,
+					colorDark : "#000000",
+					colorLight : "#ffffff",
+					correctLevel : QRCode.CorrectLevel.H
+				})
+
+				socket.emit('joined', { uid: timestamp })
+
+			},
+
+			methods: {
+				makeID: function () {
+					// 生成时间戳 唯一 key
+					return new Date().getTime()
+				},
+				makeCode: function () {
+					qrcode.makeCode('test')
+				},
+				maskActive: function () {
+					var maskEle = $('#mask')
+					maskEle.style.cssText = 'background: rgba(0, 0, 0,.66); display: block; color: #fff;'
+				},
+			}
+		}
+
+
+
+	socket.on('message', function (msgUid) {
+		scanCode.methods.maskActive()
+		window.alert('收到授权' + msgUid)
+	})
+
+	window.onload = function () {
+		scanCode.init()
+	}
+
+	</script>
+</body>
+</html>
